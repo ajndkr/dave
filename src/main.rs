@@ -1,8 +1,21 @@
+use clap::{CommandFactory, Parser, Subcommand};
 use std::process::{Command, Stdio};
-
 use which::which;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[derive(Parser)]
+#[command(author, version, about = "cli for automating dev workflows")]
+struct Cli {
+    #[clap(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    #[command(about = "choose a gum flavor")]
+    Gum {},
+}
+
+fn gum_command() -> Result<(), Box<dyn std::error::Error>> {
     // check if gun exists, if not: panic!
     which("gum").expect("gum not found. Please install gum first.");
 
@@ -16,6 +29,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .trim()
         .to_string();
     println!("selected choice: {}", gum_choice);
+    Ok(())
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let cli = Cli::parse();
+
+    match cli.command {
+        Some(Commands::Gum {}) => gum_command()?,
+        None => {
+            let _ = Cli::command().print_help();
+            std::process::exit(0);
+        }
+    }
 
     Ok(())
 }
