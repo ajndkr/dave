@@ -9,16 +9,17 @@ cli for automating my dev workflows. built in pure rust.
 
 ## getting started:
 
-### run ci tools:
+### development:
 
 ```shell
+# run linters
 make ci
-```
 
-### test changes:
-
-```shell
+# test changes
 make dev
+
+# clean up
+make clean
 ```
 
 ### install as binary:
@@ -27,8 +28,8 @@ make dev
 make install
 ```
 
-### clean up:
+## usage
 
 ```shell
-make clean
+dev-cli
 ```
