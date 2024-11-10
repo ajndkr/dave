@@ -11,5 +11,8 @@ ci:			## run linters
 dev:		## build and run project
 	cargo run
 
+install:	## install project
+	cargo install --path .
+
 clean:		## clean project
 	cargo clean
