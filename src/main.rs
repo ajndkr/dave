@@ -16,7 +16,7 @@ enum Commands {
 }
 
 fn gum_command() -> Result<(), Box<dyn std::error::Error>> {
-    // check if gun exists, if not: panic!
+    // check if gum exists, if not: panic!
     which("gum").expect("gum not found. Please install gum first.");
 
     // spawn new process, required due to tty interaction
