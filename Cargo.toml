@@ -1,5 +1,5 @@
 [package]
-name = "dev-cli"
+name = "dave"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,5 +8,5 @@ clap = { version = "4.5.20", features = ["derive"] }
 which = "7.0.0"
 
 [[bin]]
-name = "dev-cli"
+name = "dave"
 path = "src/main.rs"

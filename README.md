@@ -1,4 +1,4 @@
-# dev-cli
+# dave
 
 cli for automating my dev workflows. built in pure rust.
 
@@ -31,5 +31,5 @@ make install
 ## usage
 
 ```shell
-dev-cli
+dave
 ```
