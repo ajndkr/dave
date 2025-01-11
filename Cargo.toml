@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.5.20", features = ["derive"] }
 inquire = "0.7.5"
+thiserror = "2.0.11"
 
 [[bin]]
 name = "dave"
