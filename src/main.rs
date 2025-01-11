@@ -1,5 +1,5 @@
 use clap::{CommandFactory, Parser, Subcommand};
-use inquire::Select;
+use dave::{commands::choose::choose_command, CliResult};
 
 #[derive(Parser)]
 #[command(author, version, about = "cli for automating dev workflows")]
@@ -14,15 +14,7 @@ enum Commands {
     Choose {},
 }
 
-fn choose_command() -> Result<(), Box<dyn std::error::Error>> {
-    let choices = vec!["apple", "banana", "cherry"];
-    let choice = Select::new("pick a flavor:", choices).prompt()?;
-
-    println!("selected choice: {}", choice);
-    Ok(())
-}
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> CliResult<()> {
     let cli = Cli::parse();
 
     match cli.command {
