@@ -1,35 +1,58 @@
 # dave
 
-cli for automating my dev workflows. built in pure rust.
-
-## pre-requisites:
-
-- [rust](https://www.rust-lang.org/tools/install)
-- [gum](https://github.com/charmbracelet/gum)
+cli for automating my dev workflows. built in pure rust 🦀
 
 ## getting started:
 
-### development:
+### pre-requisites:
+
+1.  install [rust](https://www.rust-lang.org/tools/install)
+
+2.  verify installation:
+
+    ```shell
+    rustup --version
+    cargo --version
+    ```
+
+3.  install ci dependencies:
+
+    ```shell
+    rustup component add rustfmt
+    rustup component add clippy
+    cargo install cargo-audit
+    ```
+
+### Usage:
 
 ```shell
-# run linters
-make ci
-
-# test changes
-make dev
-
-# clean up
-make clean
+dave help
 ```
 
-### install as binary:
+the above command will list all the available commands.
 
-```shell
-make install
-```
+## development:
 
-## usage
+1.  run code ci checks (formatting & linting):
 
-```shell
-dave
-```
+    ```shell
+    make ci
+    ```
+
+2.  test changes:
+
+    ```shell
+    make dev <dave-cli-args ...>
+    ```
+
+3.  clean up:
+
+    ```shell
+    make clean
+    ```
+
+4.  install as binary:
+
+    ```shell
+    make install
+    ```
