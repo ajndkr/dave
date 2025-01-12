@@ -1,5 +1,5 @@
 use clap::{CommandFactory, Parser, Subcommand};
-use devx::{choose, uninstall, whereis, CliResult};
+use devx::{choose, CliResult, Command, ManageCommands};
 
 #[derive(Parser)]
 #[command(author, version, about = "cli for automating dev workflows")]
@@ -19,15 +19,7 @@ enum Commands {
     },
 }
 
-#[derive(Subcommand)]
-enum ManageCommands {
-    #[command(about = "print location of devx binary")]
-    Where {},
-    #[command(about = "uninstall devx")]
-    Uninstall {},
-}
-
-fn invalid_subcommand(subcommand: &str) -> ! {
+fn handle_invalid_subcommand(subcommand: &str) -> ! {
     let mut cmd = Cli::command();
 
     // build is required to print help of subcommands.
@@ -43,11 +35,9 @@ fn main() -> CliResult<()> {
 
     match cli.command {
         Some(Commands::Choose {}) => choose()?,
-        Some(Commands::Manage { command }) => match command {
-            Some(ManageCommands::Where {}) => whereis()?,
-            Some(ManageCommands::Uninstall {}) => uninstall()?,
-            None => invalid_subcommand("manage"),
-        },
+        Some(Commands::Manage { command }) => {
+            command.map_or_else(|| handle_invalid_subcommand("manage"), |cmd| cmd.execute())?
+        }
         None => {
             let _ = Cli::command().print_help();
             std::process::exit(0);
