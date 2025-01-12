@@ -21,5 +21,11 @@ jobs:
       - name: setup rust cache
         uses: Swatinem/rust-cache@v2
 
+      - name: install dependencies
+        run: |
+          rustup component add rustfmt
+          rustup component add clippy
+          cargo install cargo-audit
+
       - name: run ci checks
         run: make ci
