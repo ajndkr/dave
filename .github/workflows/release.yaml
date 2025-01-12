@@ -13,18 +13,25 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - x86_64-unknown-linux-gnu
+          - x86_64-unknown-linux-musl
           - x86_64-apple-darwin
     runs-on: ${{ matrix.target == 'x86_64-apple-darwin' && 'macos-latest' || 'ubuntu-latest' }}
     steps:
       - name: code checkout
         uses: actions/checkout@v4
 
+      - name: install musl tools
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+
       - name: setup rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           target: ${{ matrix.target }}
+          override: true
 
       - name: setup rust cache
         uses: Swatinem/rust-cache@v2
@@ -40,7 +47,7 @@ jobs:
           cd target/${{ matrix.target }}/release
           mv devx devx-${{ matrix.target }}
 
-      - name: publish executable to release
+      - name: publish binary to release
         uses: softprops/action-gh-release@v1
         with:
           files: target/${{ matrix.target }}/release/devx-${{ matrix.target }}
