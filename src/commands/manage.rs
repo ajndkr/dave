@@ -1,7 +1,27 @@
+use clap::Subcommand;
 use std::fs;
 use which::which;
 
-use crate::{constants::BINARY_NAME, CliError, CliResult};
+use crate::{constants::BINARY_NAME, CliError, CliResult, Command};
+
+// define subcommands for 'manage' command
+#[derive(Subcommand)]
+pub enum ManageCommands {
+    #[command(about = "print location of devx binary")]
+    Where {},
+    #[command(about = "uninstall devx")]
+    Uninstall {},
+}
+
+// map manage subcommands to functions
+impl Command for ManageCommands {
+    fn execute(&self) -> CliResult<()> {
+        match self {
+            ManageCommands::Where {} => whereis(),
+            ManageCommands::Uninstall {} => uninstall(),
+        }
+    }
+}
 
 // uninstalls devx binary
 //
