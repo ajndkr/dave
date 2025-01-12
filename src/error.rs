@@ -7,6 +7,9 @@ pub enum CliError {
 
     #[error("command failed: {0}")]
     Command(String),
+
+    #[error("io error: {0}")]
+    IOError(#[from] std::io::Error),
 }
 
 pub type CliResult<T> = Result<T, CliError>;

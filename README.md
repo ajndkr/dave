@@ -4,36 +4,15 @@ cli for automating my dev workflows. built in pure rust 🦀
 
 ## install:
 
-1.  download the latest release for your platform from
-    [GitHub Releases](https://github.com/ajndkr/devx/releases)
+1.  run the following command to install devx (note: requires `curl` and sudo access):
 
-2.  make the binary executable:
-
-    ```bash
-    chmod +x ./devx
+    ```shell
+    curl -sSL https://raw.githubusercontent.com/ajndkr/devx/main/install.sh | bash
     ```
 
-3.  move to a directory in your PATH:
+2.  run `devx help` to verify installation and list available commands
 
-    ```bash
-    sudo mv ./devx /usr/local/bin/
-    ```
-
-### usage:
-
-```shell
-devx help
-```
-
-the above command will list all the available commands.
-
-### uninstall
-
-To remove devx:
-
-```bash
-sudo rm /usr/local/bin/devx
-```
+3.  run `devx manage uninstall` to remove devx
 
 ## development:
 

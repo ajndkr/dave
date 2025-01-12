@@ -18,6 +18,5 @@ dev:		## build and run project
 install:	## install project
 	cargo install --path .
 
-clean:		## uninstall and clean project
-	cargo uninstall
+clean:		## clean project
 	cargo clean
