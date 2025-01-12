@@ -2,7 +2,40 @@
 
 cli for automating my dev workflows. built in pure rust 🦀
 
-## getting started:
+## install:
+
+1.  download the latest release for your platform from
+    [GitHub Releases](https://github.com/ajndkr/devx/releases)
+
+2.  make the binary executable:
+
+    ```bash
+    chmod +x ./devx
+    ```
+
+3.  move to a directory in your PATH:
+
+    ```bash
+    sudo mv ./devx /usr/local/bin/
+    ```
+
+### usage:
+
+```shell
+devx help
+```
+
+the above command will list all the available commands.
+
+### uninstall
+
+To remove devx:
+
+```bash
+sudo rm /usr/local/bin/devx
+```
+
+## development:
 
 ### pre-requisites:
 
@@ -23,15 +56,7 @@ cli for automating my dev workflows. built in pure rust 🦀
     cargo install cargo-audit
     ```
 
-### Usage:
-
-```shell
-devx help
-```
-
-the above command will list all the available commands.
-
-## development:
+### getting started:
 
 1.  run code ci checks (formatting & linting):
 

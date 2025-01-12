@@ -1,0 +1,34 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - x86_64-apple-darwin
+    runs-on: ${{ matrix.target == 'x86_64-apple-darwin' && 'macos-latest' || 'ubuntu-latest' }}
+    steps:
+      - name: code checkout
+        uses: actions/checkout@v4
+
+      - name: setup rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+
+      - name: build executable
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --target ${{ matrix.target }}
+
+      - name: create release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: target/${{ matrix.target }}/release/devx${{ matrix.target == 'x86_64-apple-darwin' && '.exe' || '' }}
