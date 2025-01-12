@@ -13,7 +13,7 @@ pub enum ManageCommands {
     Uninstall {},
 }
 
-// map manage subcommands to functions
+// map 'manage' subcommands to functions
 impl Command for ManageCommands {
     fn execute(&self) -> CliResult<()> {
         match self {
