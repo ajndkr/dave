@@ -153,7 +153,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "dave"
+name = "devx"
 version = "0.1.0"
 dependencies = [
  "clap",

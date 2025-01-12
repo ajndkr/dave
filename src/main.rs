@@ -1,5 +1,5 @@
 use clap::{CommandFactory, Parser, Subcommand};
-use dave::{commands::choose::choose_command, CliResult};
+use devx::{commands::choose::choose_command, CliResult};
 
 #[derive(Parser)]
 #[command(author, version, about = "cli for automating dev workflows")]

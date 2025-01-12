@@ -1,4 +1,4 @@
-# dave
+# devx
 
 cli for automating my dev workflows. built in pure rust 🦀
 
@@ -26,7 +26,7 @@ cli for automating my dev workflows. built in pure rust 🦀
 ### Usage:
 
 ```shell
-dave help
+devx help
 ```
 
 the above command will list all the available commands.
@@ -42,7 +42,7 @@ the above command will list all the available commands.
 2.  test changes:
 
     ```shell
-    make dev <dave-cli-args ...>
+    make dev <devx-cli-args ...>
     ```
 
 3.  clean up:

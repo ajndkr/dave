@@ -1,5 +1,5 @@
 [package]
-name = "dave"
+name = "devx"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,5 +9,5 @@ inquire = "0.7.5"
 thiserror = "2.0.11"
 
 [[bin]]
-name = "dave"
+name = "devx"
 path = "src/main.rs"
