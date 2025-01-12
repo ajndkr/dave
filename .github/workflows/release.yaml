@@ -28,7 +28,7 @@ jobs:
           command: build
           args: --release --target ${{ matrix.target }}
 
-      - name: create release
+      - name: publish executable to release
         uses: softprops/action-gh-release@v1
         with:
-          files: target/${{ matrix.target }}/release/devx${{ matrix.target == 'x86_64-apple-darwin' && '.exe' || '' }}
+          files: target/${{ matrix.target }}/release/devx
