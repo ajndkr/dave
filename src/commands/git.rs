@@ -1,6 +1,6 @@
-use crate::{CliResult, Command};
+use crate::{CliError, CliResult, Command};
 use clap::Subcommand;
-use std;
+use std::process;
 use which::which;
 
 // define subcommands for 'git' command
@@ -33,41 +33,53 @@ pub fn sync() -> CliResult<()> {
     // check if git is installed
     which("git").expect("git not found. install git first and try again.");
 
+    // check if the current directory is a git repository
+    let status = process::Command::new("git")
+        .arg("status")
+        .status()
+        .expect("failed to get git status");
+
+    if !status.success() {
+        return Err(CliError::Command(
+            "current directory is not a git repository".to_string(),
+        ));
+    }
+
     println!("staging local changes...");
-    std::process::Command::new("git")
+    process::Command::new("git")
         .arg("add")
         .arg(".")
         .output()
         .expect("failed to stage local changes");
 
     println!("fetching remote changes...");
-    std::process::Command::new("git")
+    process::Command::new("git")
         .arg("fetch")
         .arg("-p")
         .output()
         .expect("failed to fetch remote changes");
 
     println!("stashing local changes...");
-    std::process::Command::new("git")
+    process::Command::new("git")
         .arg("stash")
         .output()
         .expect("failed to stash local changes");
 
     println!("pulling remote changes...");
-    std::process::Command::new("git")
+    process::Command::new("git")
         .arg("pull")
         .arg("--rebase")
         .output()
         .expect("failed to pull remote changes");
 
     println!("restoring local changes...");
-    std::process::Command::new("git")
+    process::Command::new("git")
         .arg("stash")
         .arg("pop")
         .output()
         .expect("failed to restore local changes");
 
-    std::process::Command::new("git")
+    process::Command::new("git")
         .arg("stash")
         .arg("clear")
         .output()
@@ -75,7 +87,7 @@ pub fn sync() -> CliResult<()> {
 
     println!("git sync complete! latest commit:");
 
-    let git_log_output = std::process::Command::new("git")
+    let git_log_output = process::Command::new("git")
         .arg("log")
         .arg("-1")
         .output()
