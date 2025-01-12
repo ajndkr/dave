@@ -2,6 +2,10 @@
 name = "devx"
 version = "0.1.0"
 edition = "2021"
+description = "cli for automating dev workflows"
+authors = ["ajndkr <26824103+ajndkr@users.noreply.github.com>"]
+license = "MIT"
+repository = "https://github.com/ajndkr/devx"
 
 [dependencies]
 clap = { version = "4.5.20", features = ["derive"] }
@@ -11,3 +15,9 @@ thiserror = "2.0.11"
 [[bin]]
 name = "devx"
 path = "src/main.rs"
+
+[profile.release]
+opt-level = 3     # maximum optimization for speed
+lto = true        # link-time optimization, reduces binary size
+codegen-units = 1 # slower compile but better optimization
+strip = true      # removes debug symbols, reduces binary size
