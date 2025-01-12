@@ -26,13 +26,21 @@ jobs:
           toolchain: stable
           target: ${{ matrix.target }}
 
-      - name: build executable
+      - name: setup rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: build binary
         uses: actions-rs/cargo@v1
         with:
           command: build
           args: --release --target ${{ matrix.target }}
 
+      - name: rename binary
+        run: |
+          cd target/${{ matrix.target }}/release
+          mv devx devx-${{ matrix.target }}
+
       - name: publish executable to release
         uses: softprops/action-gh-release@v1
         with:
-          files: target/${{ matrix.target }}/release/devx
+          files: target/${{ matrix.target }}/release/devx-${{ matrix.target }}
