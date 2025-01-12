@@ -34,6 +34,6 @@ echo "downloading from: $DOWNLOAD_URL"
 curl -L "$DOWNLOAD_URL" -o "$BINARY_NAME"
 chmod +x "$BINARY_NAME"
 
-# sudo mv "$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
+sudo mv "$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
 echo "devx successfully installed to $INSTALL_DIR/$BINARY_NAME"
 echo "run 'devx help' to get started"
