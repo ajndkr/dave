@@ -37,3 +37,23 @@ chmod +x "$BINARY_NAME"
 sudo mv "$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
 echo "devx successfully installed to $INSTALL_DIR/$BINARY_NAME"
 echo "run 'devx help' to get started"
+
+# setup zsh completion
+read -p "setup zsh completions? (y/n) " setup_completions
+
+if [ "$setup_completions" = "y" ]; then
+   COMPLETION_DIR="${HOME}/.zsh/completions"
+   mkdir -p "$COMPLETION_DIR"
+   "$INSTALL_DIR/$BINARY_NAME" --generate zsh > "$COMPLETION_DIR/_devx"
+
+   read -p "update .zshrc with completion settings? (y/n) " update_rc
+   if [ "$update_rc" = "y" ]; then
+       if ! grep -q "fpath=($COMPLETION_DIR \$fpath)" ~/.zshrc; then
+           echo "fpath=($COMPLETION_DIR \$fpath)" >> ~/.zshrc
+           echo "autoload -U compinit && compinit" >> ~/.zshrc
+           echo "restart shell or run 'source ~/.zshrc' to enable completions"
+       else
+           echo "completion settings already present in .zshrc"
+       fi
+   fi
+fi
