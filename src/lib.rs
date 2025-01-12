@@ -6,7 +6,8 @@ pub use error::{CliError, CliResult};
 
 // re-export for external use
 pub use commands::choose::choose;
-pub use commands::manage::{uninstall, whereis, ManageCommands};
+pub use commands::git::GitCommands;
+pub use commands::manage::ManageCommands;
 
 // trait for all commands
 pub trait Command {
