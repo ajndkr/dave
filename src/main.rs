@@ -27,8 +27,14 @@ enum ManageCommands {
     Uninstall {},
 }
 
-fn invalid_command() -> ! {
-    let _ = Cli::command().print_help();
+fn invalid_subcommand(subcommand: &str) -> ! {
+    let mut cmd = Cli::command();
+
+    // build is required to print help of subcommands.
+    // see https://github.com/clap-rs/clap/issues/4685
+    cmd.build();
+
+    let _ = cmd.find_subcommand_mut(subcommand).unwrap().print_help();
     std::process::exit(0);
 }
 
@@ -40,9 +46,12 @@ fn main() -> CliResult<()> {
         Some(Commands::Manage { command }) => match command {
             Some(ManageCommands::Where {}) => whereis()?,
             Some(ManageCommands::Uninstall {}) => uninstall()?,
-            None => invalid_command(),
+            None => invalid_subcommand("manage"),
         },
-        None => invalid_command(),
+        None => {
+            let _ = Cli::command().print_help();
+            std::process::exit(0);
+        }
     }
 
     Ok(())
