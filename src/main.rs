@@ -12,7 +12,7 @@ struct Cli {
 enum Commands {
     #[command(about = "choose a flavor")]
     Choose {},
-    #[command(about = "self operations")]
+    #[command(about = "manage devx configuration")]
     Manage {
         #[clap(subcommand)]
         command: Option<ManageCommands>,
