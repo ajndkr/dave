@@ -8,6 +8,7 @@ pub use error::{CliError, CliResult};
 pub use commands::choose::choose;
 pub use commands::manage::{uninstall, whereis, ManageCommands};
 
+// trait for all commands
 pub trait Command {
     fn execute(&self) -> CliResult<()>;
 }
