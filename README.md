@@ -19,13 +19,21 @@ cli for automating my dev workflows. built in pure rust 🦀
     sudo mv ./devx /usr/local/bin/
     ```
 
-### Usage:
+### usage:
 
 ```shell
 devx help
 ```
 
 the above command will list all the available commands.
+
+### uninstall
+
+To remove devx:
+
+```bash
+sudo rm /usr/local/bin/devx
+```
 
 ## development:
 
