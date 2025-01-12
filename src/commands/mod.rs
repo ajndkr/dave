@@ -1,2 +1,2 @@
 pub mod choose;
-pub mod uninstall;
+pub mod manage;
