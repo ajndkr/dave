@@ -46,14 +46,13 @@ if [ "$setup_completions" = "y" ]; then
    mkdir -p "$COMPLETION_DIR"
    "$INSTALL_DIR/$BINARY_NAME" --generate zsh > "$COMPLETION_DIR/_devx"
 
-   read -p "update .zshrc with completion settings? (y/n) " update_rc
-   if [ "$update_rc" = "y" ]; then
-       if ! grep -q "fpath=($COMPLETION_DIR \$fpath)" ~/.zshrc; then
-           echo "fpath=($COMPLETION_DIR \$fpath)" >> ~/.zshrc
-           echo "autoload -U compinit && compinit" >> ~/.zshrc
-           echo "restart shell or run 'source ~/.zshrc' to enable completions"
-       else
-           echo "completion settings already present in .zshrc"
-       fi
+   if ! grep -q "fpath=($COMPLETION_DIR \$fpath)" ~/.zshrc; then
+       echo "" >> ~/.zshrc
+       echo "# zsh completions" >> ~/.zshrc
+       echo "fpath=($COMPLETION_DIR \$fpath)" >> ~/.zshrc
+       echo "autoload -U compinit && compinit" >> ~/.zshrc
+       echo "restart shell or run 'source ~/.zshrc' to enable completions"
+   else
+       echo "updating completions, run 'source ~/.zshrc' to refresh"
    fi
 fi
