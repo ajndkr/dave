@@ -70,7 +70,7 @@ pub fn sync() -> CliResult<()> {
         .arg("log")
         .arg("-1")
         .output()
-        .expect("❌ failed to get latest commit");
+        .map_err(|e| CliError::Command(format!("failed to get latest commit: {}", e)))?;
 
     let latest_commit = String::from_utf8_lossy(&git_log_output.stdout)
         .trim()
