@@ -38,7 +38,8 @@ fn run_git_command(args: &[&str], error_msg: &str) -> Result<(), CliError> {
 // sync latest changes from remote branch.
 //
 // workflow:
-//  stage local -> fetch remote -> stash local -> pull changes -> restore stash
+//  stage local -> fetch remote -> stash local -> pull changes
+//  -> restore (and clear) stash -> unstage local
 //
 // errors:
 // - CliError::Command: if the binary file cannot be found
@@ -63,6 +64,9 @@ pub fn sync() -> CliResult<()> {
     println!("📤 restoring local changes.");
     run_git_command(&["stash", "pop"], "failed to restore local changes")?;
     run_git_command(&["stash", "clear"], "failed to clear stash")?;
+
+    println!("🔚 unstaging local changes.");
+    run_git_command(&["reset"], "failed to unstage local changes")?;
 
     println!("✨ git sync complete! latest commit:");
 
