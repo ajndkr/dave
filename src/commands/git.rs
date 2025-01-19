@@ -47,7 +47,7 @@ fn run_git_command(args: &[&str], error_msg: &str) -> Result<(), CliError> {
 // - CliError::IOError: if the binary file cannot be removed
 pub fn sync() -> CliResult<()> {
     // check if git is installed
-    which("git").expect("❌ git not found. install git first and try again.");
+    which("git").expect("git not found. install git and try again.");
 
     println!("{}", "running git sync workflow.".bold());
 
@@ -56,7 +56,16 @@ pub fn sync() -> CliResult<()> {
         .output()
         .map_err(|e| CliError::Command(format!("failed to execute git command: {}", e)))?;
     if !git_check.status.success() {
-        println!("current directory is not a git repository. unable to sync.");
+        println!("current directory is not a git repository. nothing to sync.");
+        return Ok(());
+    }
+
+    let remote_status = process::Command::new("git")
+        .args(&["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"])
+        .output()
+        .map_err(|e| CliError::Command(format!("failed to execute git command: {}", e)))?;
+    if !remote_status.status.success() {
+        println!("no upstream branch found. nothing to sync.");
         return Ok(());
     }
 
@@ -79,19 +88,17 @@ pub fn sync() -> CliResult<()> {
     println!("{}", "unstaging local changes.".bold());
     run_git_command(&["reset"], "failed to unstage local changes")?;
 
-    println!("{}", "git sync complete! latest commit:".bold());
+    println!("{}", "git sync complete!".bold());
 
     let git_log_output = process::Command::new("git")
-        .arg("log")
-        .arg("-1")
+        .args(&["log", "-1", "--oneline"])
         .output()
         .map_err(|e| CliError::Command(format!("failed to get latest commit: {}", e)))?;
-
     let latest_commit = String::from_utf8_lossy(&git_log_output.stdout)
         .trim()
         .to_string();
 
-    println!("{}", latest_commit);
+    println!("latest commit: {}", latest_commit);
 
     Ok(())
 }
