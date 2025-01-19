@@ -51,6 +51,15 @@ pub fn sync() -> CliResult<()> {
 
     println!("{}", "running git sync workflow.".bold());
 
+    let git_check = process::Command::new("git")
+        .args(&["rev-parse", "--git-dir"])
+        .output()
+        .map_err(|e| CliError::Command(format!("failed to execute git command: {}", e)))?;
+    if !git_check.status.success() {
+        println!("current directory is not a git repository. unable to sync.");
+        return Ok(());
+    }
+
     println!("{}", "staging local changes.".bold());
     run_git_command(&["add", "."], "failed to stage local changes")?;
 
