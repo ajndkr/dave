@@ -1,5 +1,6 @@
 use crate::{CliResult, Command};
 use clap::Subcommand;
+use colored::Colorize;
 use std::process;
 use which::which;
 
@@ -45,30 +46,31 @@ fn run_git_command(args: &[&str], error_msg: &str) -> Result<(), CliError> {
 // - CliError::Command: if the binary file cannot be found
 // - CliError::IOError: if the binary file cannot be removed
 pub fn sync() -> CliResult<()> {
-    println!("🔄 running git sync workflow.");
-
+    // check if git is installed
     which("git").expect("❌ git not found. install git first and try again.");
 
-    println!("📝 staging local changes.");
+    println!("{}", "running git sync workflow.".bold());
+
+    println!("{}", "staging local changes.".bold());
     run_git_command(&["add", "."], "failed to stage local changes")?;
 
-    println!("🌐 fetching remote changes.");
+    println!("{}", "fetching remote changes.".bold());
     run_git_command(&["fetch", "-p"], "failed to fetch remote changes")?;
 
-    println!("📦 stashing local changes.");
+    println!("{}", "stashing local changes.".bold());
     run_git_command(&["stash"], "failed to stash local changes")?;
 
-    println!("⬇️ pulling remote changes.");
+    println!("{}", "pulling remote changes.".bold());
     run_git_command(&["pull", "--rebase"], "failed to pull remote changes")?;
 
-    println!("📤 restoring local changes.");
+    println!("{}", "restoring local changes.".bold());
     run_git_command(&["stash", "pop"], "failed to restore local changes")?;
     run_git_command(&["stash", "clear"], "failed to clear stash")?;
 
-    println!("🔚 unstaging local changes.");
+    println!("{}", "unstaging local changes.".bold());
     run_git_command(&["reset"], "failed to unstage local changes")?;
 
-    println!("✨ git sync complete! latest commit:");
+    println!("{}", "git sync complete! latest commit:".bold());
 
     let git_log_output = process::Command::new("git")
         .arg("log")
@@ -80,7 +82,7 @@ pub fn sync() -> CliResult<()> {
         .trim()
         .to_string();
 
-    println!("📜 {}", latest_commit);
+    println!("{}", latest_commit);
 
     Ok(())
 }
