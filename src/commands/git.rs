@@ -98,7 +98,7 @@ pub fn sync() -> CliResult<()> {
         .trim()
         .to_string();
 
-    println!("latest commit: {}", latest_commit);
+    println!("latest commit: {}", latest_commit.dimmed());
 
     Ok(())
 }
