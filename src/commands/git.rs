@@ -46,7 +46,6 @@ fn run_git_command(args: &[&str], error_msg: &str) -> Result<(), CliError> {
 // - CliError::Command: if the binary file cannot be found
 // - CliError::IOError: if the binary file cannot be removed
 pub fn sync() -> CliResult<()> {
-    // check if git is installed
     which("git").expect("git not found. install git and try again.");
 
     println!("{}", "running git sync workflow.".bold());
