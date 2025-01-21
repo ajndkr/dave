@@ -10,6 +10,7 @@ repository = "https://github.com/ajndkr/devx"
 [dependencies]
 clap = { version = "4.5.20", features = ["derive"] }
 clap_complete = "4.5.42"
+colored = "3.0.0"
 inquire = "0.7.5"
 thiserror = "2.0.11"
 which = "7.0.1"
