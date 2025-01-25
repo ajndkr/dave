@@ -26,11 +26,11 @@ impl Command for GitCommands {
 //
 // errors:
 // - CliError::Command: if the git command fails
-fn run_git_command(
+fn git_exec(
     args: &[&str],
     error_msg: &str,
     capture_output: bool,
-) -> Result<std::process::Output, CliError> {
+) -> Result<process::Output, CliError> {
     let mut cmd = process::Command::new("git");
     cmd.args(args);
 
@@ -42,9 +42,10 @@ fn run_git_command(
             .stderr(process::Stdio::inherit())
             .status()
             .map_err(|e| CliError::Command(format!("{}: {}", error_msg, e)))
-            .and_then(|_| {
-                cmd.output()
-                    .map_err(|e| CliError::Command(format!("{}: {}", error_msg, e)))
+            .map(|status| process::Output {
+                status,
+                stdout: Vec::new(),
+                stderr: Vec::new(),
             })
     }
 }
@@ -61,9 +62,7 @@ fn run_git_command(
 pub fn sync() -> CliResult<()> {
     which("git").expect("git not found. install git and try again.");
 
-    println!("{}", "running git sync workflow.".bold());
-
-    let git_check = run_git_command(
+    let git_check = git_exec(
         &["rev-parse", "--git-dir"],
         "failed to execute git command",
         true,
@@ -73,42 +72,35 @@ pub fn sync() -> CliResult<()> {
         return Ok(());
     }
 
-    let remote_status = run_git_command(
+    let remote_status = git_exec(
         &["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"],
         "failed to get upstream branch",
         true,
     )?;
     if !remote_status.status.success() {
-        println!("no upstream branch found. nothing to sync.");
+        println!("no upstream branch found. nothing to sync");
         return Ok(());
     }
 
-    println!("{}", "staging local changes.".bold());
-    run_git_command(&["add", "."], "failed to stage local changes", false)?;
+    println!("{}", "checking local branch status".bold());
+    let mut local_changes_stashed = false;
+    let git_status = git_exec(&["status", "--porcelain"], "failed to get git status", true)?;
+    if !git_status.stdout.is_empty() {
+        println!("- local changes found. stashing local changes");
+        git_exec(&["add", "."], "failed to stage local changes", false)?;
+        git_exec(&["stash"], "failed to stash local changes", false)?;
+        local_changes_stashed = true;
+    }
 
-    println!("{}", "fetching remote changes.".bold());
-    run_git_command(&["fetch", "-p"], "failed to fetch remote changes", false)?;
-
-    println!("{}", "stashing local changes.".bold());
-    run_git_command(&["stash"], "failed to stash local changes", false)?;
-
-    println!("{}", "pulling remote changes.".bold());
-    run_git_command(
+    println!("{}", "syncing changes with upstream branch".bold());
+    git_exec(&["fetch", "-p"], "failed to fetch remote changes", false)?;
+    git_exec(
         &["pull", "--rebase"],
         "failed to pull remote changes",
         false,
     )?;
 
-    println!("{}", "restoring local changes.".bold());
-    run_git_command(&["stash", "pop"], "failed to restore local changes", false)?;
-    run_git_command(&["stash", "clear"], "failed to clear stash", false)?;
-
-    println!("{}", "unstaging local changes.".bold());
-    run_git_command(&["reset"], "failed to unstage local changes", false)?;
-
-    println!("{}", "git sync complete!".bold());
-
-    let git_log_output = run_git_command(
+    let git_log_output = git_exec(
         &["log", "-1", "--oneline"],
         "failed to get latest commit",
         true,
@@ -117,7 +109,18 @@ pub fn sync() -> CliResult<()> {
         .trim()
         .to_string();
 
-    println!("latest commit: {}", latest_commit.dimmed());
+    println!("- latest commit: {}", latest_commit.dimmed());
+
+    if local_changes_stashed {
+        println!("{}", "restoring stashed changes".bold());
+        git_exec(&["stash", "pop"], "failed to restore local changes", false)?;
+        git_exec(&["stash", "clear"], "failed to clear stash", false)?;
+
+        println!("{}", "unstaging local changes.".bold());
+        git_exec(&["reset"], "failed to unstage local changes", false)?;
+    }
+
+    println!("{}", "git sync complete ^.^".bold());
 
     Ok(())
 }
