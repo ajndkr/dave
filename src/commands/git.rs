@@ -9,8 +9,14 @@ use crate::CliError;
 // define subcommands for 'git' command
 #[derive(Subcommand)]
 pub enum GitCommands {
-    #[command(about = "sync latest changes from remote branch")]
+    #[command(about = "sync latest changes from remote")]
     Sync {},
+    #[command(about = "list all local branches")]
+    List {},
+    #[command(about = "switch local branch")]
+    Switch {},
+    #[command(about = "delete a local branch")]
+    Delete {},
 }
 
 // map 'git' subcommands to functions
@@ -18,6 +24,9 @@ impl Command for GitCommands {
     fn execute(&self) -> CliResult<()> {
         match self {
             GitCommands::Sync {} => sync(),
+            GitCommands::List {} => list_branches(),
+            GitCommands::Switch {} => switch_branch(),
+            GitCommands::Delete {} => delete_branch(),
         }
     }
 }
@@ -50,15 +59,12 @@ fn git_exec(
     }
 }
 
-// sync latest changes from remote branch.
+// sync latest changes from remote branch
 //
-// workflow:
-//  stage local -> fetch remote -> stash local -> pull changes
-//  -> restore (and clear) stash -> unstage local
+// panics: if git is not installed
 //
 // errors:
-// - CliError::Command: if the binary file cannot be found
-// - CliError::IOError: if the binary file cannot be removed
+// - CliError::Command: if any git command fails
 pub fn sync() -> CliResult<()> {
     which("git").expect("git not found. install git and try again.");
 
@@ -122,5 +128,20 @@ pub fn sync() -> CliResult<()> {
 
     println!("{}", "git sync complete ^.^".bold());
 
+    Ok(())
+}
+
+// list all local branches
+pub fn list_branches() -> CliResult<()> {
+    Ok(())
+}
+
+// switch local branch
+pub fn switch_branch() -> CliResult<()> {
+    Ok(())
+}
+
+// delete a local branch
+pub fn delete_branch() -> CliResult<()> {
     Ok(())
 }
