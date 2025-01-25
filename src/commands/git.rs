@@ -11,8 +11,6 @@ use crate::CliError;
 pub enum GitCommands {
     #[command(about = "sync latest changes from remote")]
     Sync {},
-    #[command(about = "list all local branches")]
-    List {},
     #[command(about = "switch local branch")]
     Switch {},
     #[command(about = "delete a local branch")]
@@ -24,7 +22,6 @@ impl Command for GitCommands {
     fn execute(&self) -> CliResult<()> {
         match self {
             GitCommands::Sync {} => sync(),
-            GitCommands::List {} => list_branches(),
             GitCommands::Switch {} => switch_branch(),
             GitCommands::Delete {} => delete_branch(),
         }
@@ -131,17 +128,16 @@ pub fn sync() -> CliResult<()> {
     Ok(())
 }
 
-// list all local branches
-pub fn list_branches() -> CliResult<()> {
-    Ok(())
-}
-
 // switch local branch
 pub fn switch_branch() -> CliResult<()> {
+    which("git").expect("git not found. install git and try again.");
+
     Ok(())
 }
 
 // delete a local branch
 pub fn delete_branch() -> CliResult<()> {
+    which("git").expect("git not found. install git and try again.");
+
     Ok(())
 }
