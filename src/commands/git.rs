@@ -219,7 +219,7 @@ pub fn delete_branch() -> CliResult<()> {
 
     let confirm = Confirm::new("are you sure?")
         .with_default(false)
-        .with_help_message("This data is stored for good reasons")
+        .with_help_message("this action is irreversible")
         .prompt();
 
     match confirm {
