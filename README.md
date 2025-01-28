@@ -2,6 +2,8 @@
 
 cli for automating my dev workflows. built in pure rust 🦀
 
+<img src="assets/cli-img.png" alt="devx" width="300" style="border: 1px solid grey; border-radius: 5px;">
+
 ## install:
 
 1.  run the following command to install devx (note: requires `curl` and sudo access):
