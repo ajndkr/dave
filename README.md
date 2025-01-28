@@ -23,19 +23,10 @@ cli for automating my dev workflows. built in pure rust 🦀
 
 1.  install [rust](https://www.rust-lang.org/tools/install)
 
-2.  verify installation:
+2.  setup project:
 
     ```shell
-    rustup --version
-    cargo --version
-    ```
-
-3.  install ci dependencies:
-
-    ```shell
-    rustup component add rustfmt
-    rustup component add clippy
-    cargo install cargo-audit
+    make init
     ```
 
 ### getting started:
@@ -49,17 +40,11 @@ cli for automating my dev workflows. built in pure rust 🦀
 2.  test changes:
 
     ```shell
-    make dev <devx-cli-args ...>
+    make install
     ```
 
 3.  clean up:
 
     ```shell
     make clean
-    ```
-
-4.  install as binary:
-
-    ```shell
-    make install
     ```
