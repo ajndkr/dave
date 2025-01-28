@@ -1,6 +1,7 @@
 use crate::{CliResult, Command};
 use clap::Subcommand;
 use colored::Colorize;
+use inquire::Select;
 use std::process;
 use which::which;
 
@@ -131,6 +132,59 @@ pub fn sync() -> CliResult<()> {
 // switch local branch
 pub fn switch_branch() -> CliResult<()> {
     which("git").expect("git not found. install git and try again.");
+
+    let proc_output = git_exec(
+        &["--no-pager", "branch", "--no-color"],
+        "failed to get branch list",
+        true,
+    )?;
+
+    let proc_output_str = String::from_utf8_lossy(&proc_output.stdout);
+    let all_branches = proc_output_str
+        .lines()
+        .map(|line| line.trim())
+        .collect::<Vec<&str>>();
+
+    // finds current branch from the above git command output
+    // if no branch is found, defaults to 'main'
+    let current_branch = all_branches
+        .iter()
+        .find(|branch| branch.starts_with('*'))
+        .map(|branch| branch.trim_start_matches('*').trim())
+        .unwrap_or("main");
+
+    println!("{}: {}", "current branch".bold(), current_branch);
+
+    let other_branches = all_branches
+        .iter()
+        .filter(|branch| !branch.starts_with('*'))
+        .map(|branch| branch.trim())
+        .collect::<Vec<&str>>();
+
+    let new_branch = Select::new("select new branch:", other_branches).prompt()?;
+
+    println!("{}", "checking local branch status".bold());
+    let mut local_changes_stashed = false;
+    let git_status = git_exec(&["status", "--porcelain"], "failed to get git status", true)?;
+    if !git_status.stdout.is_empty() {
+        println!("- local changes found. stashing local changes");
+        git_exec(&["add", "."], "failed to stage local changes", false)?;
+        git_exec(&["stash"], "failed to stash local changes", false)?;
+        local_changes_stashed = true;
+    }
+
+    git_exec(&["checkout", new_branch], "failed to switch branch", false)?;
+
+    if local_changes_stashed {
+        println!("{}", "restoring stashed changes".bold());
+        git_exec(&["stash", "pop"], "failed to restore local changes", false)?;
+        git_exec(&["stash", "clear"], "failed to clear stash", false)?;
+
+        println!("{}", "unstaging local changes.".bold());
+        git_exec(&["reset"], "failed to unstage local changes", false)?;
+    }
+
+    println!("{}: {}", "switched to branch".bold(), new_branch);
 
     Ok(())
 }
