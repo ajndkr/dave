@@ -30,12 +30,13 @@ cli for automating my dev workflows. built in pure rust 🦀
     cargo --version
     ```
 
-3.  install ci dependencies:
+3.  install additional dependencies:
 
     ```shell
     rustup component add rustfmt
     rustup component add clippy
     cargo install cargo-audit
+    cargo install cargo-edit
     ```
 
 ### getting started:
