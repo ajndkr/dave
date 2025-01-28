@@ -7,8 +7,8 @@ cli for automating my dev workflows. built in pure rust 🦀
 1.  run the following command to install devx (note: requires `curl` and sudo access):
 
     ```shell
-    curl -sSL https://raw.githubusercontent.com/ajndkr/devx/main/install.sh -o install.sh
-    sh install.sh
+    curl -sSL https://raw.githubusercontent.com/ajndkr/devx/main/install.sh -o install.sh \
+    && sh install.sh && rm install.sh
     ```
 
 2.  run `devx help` to verify installation and list available commands
