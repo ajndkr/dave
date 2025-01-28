@@ -1,6 +1,6 @@
 use clap::{value_parser, ArgAction, CommandFactory, Parser, Subcommand};
 use clap_complete::{generate, Shell};
-use devx::{choose, CliResult, Command, GitCommands, ManageCommands};
+use devx::{CliResult, Command, GitCommands, ManageCommands};
 use std::io;
 
 #[derive(Parser)]
@@ -15,8 +15,6 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    #[command(about = "choose a flavor")]
-    Choose {},
     #[command(about = "manage devx configuration")]
     Manage {
         #[clap(subcommand)]
@@ -63,7 +61,6 @@ fn main() -> CliResult<()> {
 
     // match commands and subcommands
     match cli.command {
-        Some(Commands::Choose {}) => choose()?,
         Some(Commands::Manage { command }) => {
             command.map_or_else(|| handle_invalid_subcommand("manage"), |cmd| cmd.execute())?
         }
