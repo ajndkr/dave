@@ -1,6 +1,7 @@
 use crate::{CliResult, Command};
 use clap::Subcommand;
 use colored::Colorize;
+use inquire::{Confirm, Select};
 use std::process;
 use which::which;
 
@@ -9,8 +10,12 @@ use crate::CliError;
 // define subcommands for 'git' command
 #[derive(Subcommand)]
 pub enum GitCommands {
-    #[command(about = "sync latest changes from remote branch")]
+    #[command(about = "sync latest changes from remote")]
     Sync {},
+    #[command(about = "switch branch (local only)")]
+    Switch {},
+    #[command(about = "delete branch (local only)")]
+    Delete {},
 }
 
 // map 'git' subcommands to functions
@@ -18,6 +23,8 @@ impl Command for GitCommands {
     fn execute(&self) -> CliResult<()> {
         match self {
             GitCommands::Sync {} => sync(),
+            GitCommands::Switch {} => switch_branch(),
+            GitCommands::Delete {} => delete_branch(),
         }
     }
 }
@@ -26,78 +33,220 @@ impl Command for GitCommands {
 //
 // errors:
 // - CliError::Command: if the git command fails
-fn run_git_command(args: &[&str], error_msg: &str) -> Result<(), CliError> {
-    process::Command::new("git")
-        .args(args)
-        .stdout(process::Stdio::inherit())
-        .stderr(process::Stdio::inherit())
-        .status()
-        .map_err(|e| CliError::Command(format!("{}: {}", error_msg, e)))
-        .map(|_| ())
+fn git_exec(
+    args: &[&str],
+    error_msg: &str,
+    capture_output: bool,
+) -> Result<process::Output, CliError> {
+    let mut cmd = process::Command::new("git");
+    cmd.args(args);
+
+    if capture_output {
+        cmd.output()
+            .map_err(|e| CliError::Command(format!("{}: {}", error_msg, e)))
+    } else {
+        cmd.stdout(process::Stdio::inherit())
+            .stderr(process::Stdio::inherit())
+            .status()
+            .map_err(|e| CliError::Command(format!("{}: {}", error_msg, e)))
+            .map(|status| process::Output {
+                status,
+                stdout: Vec::new(),
+                stderr: Vec::new(),
+            })
+    }
 }
 
-// sync latest changes from remote branch.
+// sync latest changes from remote branch
 //
-// workflow:
-//  stage local -> fetch remote -> stash local -> pull changes
-//  -> restore (and clear) stash -> unstage local
+// panics: if git is not installed
 //
 // errors:
-// - CliError::Command: if the binary file cannot be found
-// - CliError::IOError: if the binary file cannot be removed
+// - CliError::Command: if any git command fails
 pub fn sync() -> CliResult<()> {
     which("git").expect("git not found. install git and try again.");
 
-    println!("{}", "running git sync workflow.".bold());
-
-    let git_check = process::Command::new("git")
-        .args(&["rev-parse", "--git-dir"])
-        .output()
-        .map_err(|e| CliError::Command(format!("failed to execute git command: {}", e)))?;
+    let git_check = git_exec(
+        &["rev-parse", "--git-dir"],
+        "failed to execute git command",
+        true,
+    )?;
     if !git_check.status.success() {
         println!("current directory is not a git repository. nothing to sync.");
         return Ok(());
     }
 
-    let remote_status = process::Command::new("git")
-        .args(&["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"])
-        .output()
-        .map_err(|e| CliError::Command(format!("failed to execute git command: {}", e)))?;
+    let remote_status = git_exec(
+        &["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"],
+        "failed to get upstream branch",
+        true,
+    )?;
     if !remote_status.status.success() {
-        println!("no upstream branch found. nothing to sync.");
+        println!("no upstream branch found. nothing to sync");
         return Ok(());
     }
 
-    println!("{}", "staging local changes.".bold());
-    run_git_command(&["add", "."], "failed to stage local changes")?;
+    println!("{}", "checking local branch status".bold());
+    let mut local_changes_stashed = false;
+    let git_status = git_exec(&["status", "--porcelain"], "failed to get git status", true)?;
+    if !git_status.stdout.is_empty() {
+        println!("- local changes found. stashing local changes");
+        git_exec(&["add", "."], "failed to stage local changes", false)?;
+        git_exec(&["stash"], "failed to stash local changes", false)?;
+        local_changes_stashed = true;
+    }
 
-    println!("{}", "fetching remote changes.".bold());
-    run_git_command(&["fetch", "-p"], "failed to fetch remote changes")?;
+    println!("{}", "syncing changes with upstream branch".bold());
+    git_exec(&["fetch", "-p"], "failed to fetch remote changes", false)?;
+    git_exec(
+        &["pull", "--rebase"],
+        "failed to pull remote changes",
+        false,
+    )?;
 
-    println!("{}", "stashing local changes.".bold());
-    run_git_command(&["stash"], "failed to stash local changes")?;
-
-    println!("{}", "pulling remote changes.".bold());
-    run_git_command(&["pull", "--rebase"], "failed to pull remote changes")?;
-
-    println!("{}", "restoring local changes.".bold());
-    run_git_command(&["stash", "pop"], "failed to restore local changes")?;
-    run_git_command(&["stash", "clear"], "failed to clear stash")?;
-
-    println!("{}", "unstaging local changes.".bold());
-    run_git_command(&["reset"], "failed to unstage local changes")?;
-
-    println!("{}", "git sync complete!".bold());
-
-    let git_log_output = process::Command::new("git")
-        .args(&["log", "-1", "--oneline"])
-        .output()
-        .map_err(|e| CliError::Command(format!("failed to get latest commit: {}", e)))?;
+    let git_log_output = git_exec(
+        &["log", "-1", "--oneline"],
+        "failed to get latest commit",
+        true,
+    )?;
     let latest_commit = String::from_utf8_lossy(&git_log_output.stdout)
         .trim()
         .to_string();
 
-    println!("latest commit: {}", latest_commit.dimmed());
+    println!("- latest commit: {}", latest_commit.dimmed());
+
+    if local_changes_stashed {
+        println!("{}", "restoring stashed changes".bold());
+        git_exec(&["stash", "pop"], "failed to restore local changes", false)?;
+        git_exec(&["stash", "clear"], "failed to clear stash", false)?;
+
+        println!("{}", "unstaging local changes.".bold());
+        git_exec(&["reset"], "failed to unstage local changes", false)?;
+    }
+
+    println!("{}", "git sync complete ^.^".bold());
+
+    Ok(())
+}
+
+// switch local branch
+//
+// panics: if git is not installed
+//
+// errors:
+// - CliError::Command: if any git command fails
+pub fn switch_branch() -> CliResult<()> {
+    which("git").expect("git not found. install git and try again.");
+
+    let git_output = git_exec(
+        &["--no-pager", "branch", "--no-color"],
+        "failed to get branch list",
+        true,
+    )?;
+
+    let git_output_str = String::from_utf8_lossy(&git_output.stdout);
+    let all_branches = git_output_str
+        .lines()
+        .map(|line| line.trim())
+        .collect::<Vec<&str>>();
+
+    // finds current branch from the above git command output
+    // if no branch is found, defaults to 'main'
+    let current_branch = all_branches
+        .iter()
+        .find(|branch| branch.starts_with('*'))
+        .map(|branch| branch.trim_start_matches('*').trim())
+        .unwrap_or("main");
+
+    println!("{}: {}", "current branch".bold(), current_branch);
+
+    let other_branches = all_branches
+        .iter()
+        .filter(|branch| !branch.starts_with('*'))
+        .map(|branch| branch.trim())
+        .collect::<Vec<&str>>();
+
+    let new_branch = Select::new("select new branch:", other_branches).prompt()?;
+
+    let confirm = Confirm::new("are you sure?")
+        .with_default(false)
+        .with_help_message("This data is stored for good reasons")
+        .prompt();
+
+    match confirm {
+        Ok(true) => {
+            println!("{}", "checking local branch status".bold());
+            let mut local_changes_stashed = false;
+            let git_status =
+                git_exec(&["status", "--porcelain"], "failed to get git status", true)?;
+            if !git_status.stdout.is_empty() {
+                println!("- local changes found. stashing local changes");
+                git_exec(&["add", "."], "failed to stage local changes", false)?;
+                git_exec(&["stash"], "failed to stash local changes", false)?;
+                local_changes_stashed = true;
+            }
+
+            git_exec(&["checkout", new_branch], "failed to switch branch", false)?;
+
+            if local_changes_stashed {
+                println!("{}", "restoring stashed changes".bold());
+                git_exec(&["stash", "pop"], "failed to restore local changes", false)?;
+                git_exec(&["stash", "clear"], "failed to clear stash", false)?;
+
+                println!("{}", "unstaging local changes.".bold());
+                git_exec(&["reset"], "failed to unstage local changes", false)?;
+            }
+
+            println!("{}", "branch switch complete ^.^".bold());
+        }
+        Ok(false) => println!("{}", "aborting branch switch".bold()),
+        Err(_) => println!("{}", "invalid input. aborting branch switch".bold()),
+    }
+
+    Ok(())
+}
+
+// delete a local branch
+//
+// panics: if git is not installed
+//
+// errors:
+// - CliError::Command: if any git command fails
+pub fn delete_branch() -> CliResult<()> {
+    which("git").expect("git not found. install git and try again.");
+    let git_output = git_exec(
+        &["--no-pager", "branch", "--no-color"],
+        "failed to get branch list",
+        true,
+    )?;
+
+    let git_output_str = String::from_utf8_lossy(&git_output.stdout);
+    let other_branches = git_output_str
+        .lines()
+        .filter(|line| !line.starts_with('*'))
+        .map(|branch| branch.trim())
+        .collect::<Vec<&str>>();
+
+    let branch_to_delete = Select::new("select branch to delete:", other_branches).prompt()?;
+
+    let confirm = Confirm::new("are you sure?")
+        .with_default(false)
+        .with_help_message("This data is stored for good reasons")
+        .prompt();
+
+    match confirm {
+        Ok(true) => {
+            git_exec(
+                &["branch", "-D", branch_to_delete],
+                "failed to delete branch",
+                false,
+            )?;
+
+            println!("{}", "branch delete complete ^.^".bold());
+        }
+        Ok(false) => println!("{}", "aborting branch delete".bold()),
+        Err(_) => println!("{}", "invalid input. aborting branch delete".bold()),
+    }
 
     Ok(())
 }
