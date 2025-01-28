@@ -130,17 +130,22 @@ pub fn sync() -> CliResult<()> {
 }
 
 // switch local branch
+//
+// panics: if git is not installed
+//
+// errors:
+// - CliError::Command: if any git command fails
 pub fn switch_branch() -> CliResult<()> {
     which("git").expect("git not found. install git and try again.");
 
-    let proc_output = git_exec(
+    let git_output = git_exec(
         &["--no-pager", "branch", "--no-color"],
         "failed to get branch list",
         true,
     )?;
 
-    let proc_output_str = String::from_utf8_lossy(&proc_output.stdout);
-    let all_branches = proc_output_str
+    let git_output_str = String::from_utf8_lossy(&git_output.stdout);
+    let all_branches = git_output_str
         .lines()
         .map(|line| line.trim())
         .collect::<Vec<&str>>();
@@ -190,8 +195,33 @@ pub fn switch_branch() -> CliResult<()> {
 }
 
 // delete a local branch
+//
+// panics: if git is not installed
+//
+// errors:
+// - CliError::Command: if any git command fails
 pub fn delete_branch() -> CliResult<()> {
     which("git").expect("git not found. install git and try again.");
+    let git_output = git_exec(
+        &["--no-pager", "branch", "--no-color"],
+        "failed to get branch list",
+        true,
+    )?;
+
+    let git_output_str = String::from_utf8_lossy(&git_output.stdout);
+    let other_branches = git_output_str
+        .lines()
+        .filter(|line| !line.starts_with('*'))
+        .map(|branch| branch.trim())
+        .collect::<Vec<&str>>();
+
+    let branch_to_delete = Select::new("select branch to delete:", other_branches).prompt()?;
+
+    git_exec(
+        &["branch", "-D", branch_to_delete],
+        "failed to delete branch",
+        false,
+    )?;
 
     Ok(())
 }
