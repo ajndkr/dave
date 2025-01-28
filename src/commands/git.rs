@@ -184,7 +184,7 @@ pub fn switch_branch() -> CliResult<()> {
         git_exec(&["reset"], "failed to unstage local changes", false)?;
     }
 
-    println!("{}: {}", "switched to branch".bold(), new_branch);
+    println!("{}", "branch switch complete ^.^".bold());
 
     Ok(())
 }
