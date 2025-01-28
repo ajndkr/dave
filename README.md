@@ -2,7 +2,7 @@
 
 cli for automating my dev workflows. built in pure rust 🦀
 
-<img src="assets/cli-img.png" alt="devx" width="300" style="border: 1px solid grey; border-radius: 5px;">
+<img src="assets/cli-img.png" alt="devx" width="500" style="border: 1px solid grey; border-radius: 5px;">
 
 ## install:
 
