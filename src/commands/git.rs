@@ -1,7 +1,7 @@
 use crate::{CliResult, Command};
 use clap::Subcommand;
 use colored::Colorize;
-use inquire::Select;
+use inquire::{Confirm, Select};
 use std::process;
 use which::which;
 
@@ -168,28 +168,40 @@ pub fn switch_branch() -> CliResult<()> {
 
     let new_branch = Select::new("select new branch:", other_branches).prompt()?;
 
-    println!("{}", "checking local branch status".bold());
-    let mut local_changes_stashed = false;
-    let git_status = git_exec(&["status", "--porcelain"], "failed to get git status", true)?;
-    if !git_status.stdout.is_empty() {
-        println!("- local changes found. stashing local changes");
-        git_exec(&["add", "."], "failed to stage local changes", false)?;
-        git_exec(&["stash"], "failed to stash local changes", false)?;
-        local_changes_stashed = true;
+    let confirm = Confirm::new("are you sure?")
+        .with_default(false)
+        .with_help_message("This data is stored for good reasons")
+        .prompt();
+
+    match confirm {
+        Ok(true) => {
+            println!("{}", "checking local branch status".bold());
+            let mut local_changes_stashed = false;
+            let git_status =
+                git_exec(&["status", "--porcelain"], "failed to get git status", true)?;
+            if !git_status.stdout.is_empty() {
+                println!("- local changes found. stashing local changes");
+                git_exec(&["add", "."], "failed to stage local changes", false)?;
+                git_exec(&["stash"], "failed to stash local changes", false)?;
+                local_changes_stashed = true;
+            }
+
+            git_exec(&["checkout", new_branch], "failed to switch branch", false)?;
+
+            if local_changes_stashed {
+                println!("{}", "restoring stashed changes".bold());
+                git_exec(&["stash", "pop"], "failed to restore local changes", false)?;
+                git_exec(&["stash", "clear"], "failed to clear stash", false)?;
+
+                println!("{}", "unstaging local changes.".bold());
+                git_exec(&["reset"], "failed to unstage local changes", false)?;
+            }
+
+            println!("{}", "branch switch complete ^.^".bold());
+        }
+        Ok(false) => println!("{}", "aborting branch switch".bold()),
+        Err(_) => println!("{}", "invalid input. aborting branch switch".bold()),
     }
-
-    git_exec(&["checkout", new_branch], "failed to switch branch", false)?;
-
-    if local_changes_stashed {
-        println!("{}", "restoring stashed changes".bold());
-        git_exec(&["stash", "pop"], "failed to restore local changes", false)?;
-        git_exec(&["stash", "clear"], "failed to clear stash", false)?;
-
-        println!("{}", "unstaging local changes.".bold());
-        git_exec(&["reset"], "failed to unstage local changes", false)?;
-    }
-
-    println!("{}", "branch switch complete ^.^".bold());
 
     Ok(())
 }
@@ -217,11 +229,24 @@ pub fn delete_branch() -> CliResult<()> {
 
     let branch_to_delete = Select::new("select branch to delete:", other_branches).prompt()?;
 
-    git_exec(
-        &["branch", "-D", branch_to_delete],
-        "failed to delete branch",
-        false,
-    )?;
+    let confirm = Confirm::new("are you sure?")
+        .with_default(false)
+        .with_help_message("This data is stored for good reasons")
+        .prompt();
+
+    match confirm {
+        Ok(true) => {
+            git_exec(
+                &["branch", "-D", branch_to_delete],
+                "failed to delete branch",
+                false,
+            )?;
+
+            println!("{}", "branch delete complete ^.^".bold());
+        }
+        Ok(false) => println!("{}", "aborting branch delete".bold()),
+        Err(_) => println!("{}", "invalid input. aborting branch delete".bold()),
+    }
 
     Ok(())
 }
