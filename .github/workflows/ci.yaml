@@ -22,10 +22,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: install dependencies
-        run: |
-          rustup component add rustfmt
-          rustup component add clippy
-          cargo install cargo-audit
+        run: make init
 
       - name: run ci checks
         run: make ci
