@@ -12,9 +12,9 @@ use crate::CliError;
 pub enum GitCommands {
     #[command(about = "sync latest changes from remote")]
     Sync {},
-    #[command(about = "switch local branch")]
+    #[command(about = "switch branch (local only)")]
     Switch {},
-    #[command(about = "delete a local branch")]
+    #[command(about = "delete branch (local only)")]
     Delete {},
 }
 
