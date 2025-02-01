@@ -57,6 +57,46 @@ fn git_exec(
     }
 }
 
+// get current branch name and list of all branches
+//
+// panics: if git is not installed
+// errors:
+// - CliError::Command: if any git command fails
+fn get_branch_info() -> CliResult<(String, Vec<String>)> {
+    which("git").expect("git not found. install git and try again.");
+
+    let git_output = git_exec(
+        &["--no-pager", "branch", "--no-color"],
+        "failed to get branch list",
+        true,
+    )?;
+
+    let git_output_str = String::from_utf8_lossy(&git_output.stdout);
+    let all_branches = git_output_str
+        .lines()
+        .map(|line| line.trim())
+        .collect::<Vec<&str>>();
+
+    // finds current branch from the above git command output
+    // if no branch is found, defaults to 'main'
+    let current_branch = all_branches
+        .iter()
+        .find(|branch| branch.starts_with('*'))
+        .map(|branch| branch.trim_start_matches('*').trim())
+        .unwrap_or("main");
+
+    let other_branches = all_branches
+        .iter()
+        .filter(|branch| !branch.starts_with('*'))
+        .map(|branch| branch.trim())
+        .collect::<Vec<&str>>();
+
+    Ok((
+        current_branch.to_string(),
+        other_branches.iter().map(|s| s.to_string()).collect(),
+    ))
+}
+
 // sync latest changes from remote branch
 //
 // panics: if git is not installed
@@ -136,33 +176,7 @@ pub fn sync() -> CliResult<()> {
 // errors:
 // - CliError::Command: if any git command fails
 pub fn switch_branch() -> CliResult<()> {
-    which("git").expect("git not found. install git and try again.");
-
-    let git_output = git_exec(
-        &["--no-pager", "branch", "--no-color"],
-        "failed to get branch list",
-        true,
-    )?;
-
-    let git_output_str = String::from_utf8_lossy(&git_output.stdout);
-    let all_branches = git_output_str
-        .lines()
-        .map(|line| line.trim())
-        .collect::<Vec<&str>>();
-
-    // finds current branch from the above git command output
-    // if no branch is found, defaults to 'main'
-    let current_branch = all_branches
-        .iter()
-        .find(|branch| branch.starts_with('*'))
-        .map(|branch| branch.trim_start_matches('*').trim())
-        .unwrap_or("main");
-
-    let other_branches = all_branches
-        .iter()
-        .filter(|branch| !branch.starts_with('*'))
-        .map(|branch| branch.trim())
-        .collect::<Vec<&str>>();
+    let (current_branch, other_branches) = get_branch_info()?;
 
     // check if other_branches is empty
     // if empty, return early
@@ -188,7 +202,7 @@ pub fn switch_branch() -> CliResult<()> {
         local_changes_stashed = true;
     }
 
-    git_exec(&["checkout", new_branch], "failed to switch branch", false)?;
+    git_exec(&["checkout", &new_branch], "failed to switch branch", false)?;
 
     if local_changes_stashed {
         println!("{}", "restoring stashed changes".bold());
@@ -211,32 +225,7 @@ pub fn switch_branch() -> CliResult<()> {
 // errors:
 // - CliError::Command: if any git command fails
 pub fn delete_branch() -> CliResult<()> {
-    which("git").expect("git not found. install git and try again.");
-    let git_output = git_exec(
-        &["--no-pager", "branch", "--no-color"],
-        "failed to get branch list",
-        true,
-    )?;
-
-    let git_output_str = String::from_utf8_lossy(&git_output.stdout);
-    let all_branches = git_output_str
-        .lines()
-        .map(|line| line.trim())
-        .collect::<Vec<&str>>();
-
-    // finds current branch from the above git command output
-    // if no branch is found, defaults to 'main'
-    let current_branch = all_branches
-        .iter()
-        .find(|branch| branch.starts_with('*'))
-        .map(|branch| branch.trim_start_matches('*').trim())
-        .unwrap_or("main");
-
-    let other_branches = all_branches
-        .iter()
-        .filter(|branch| !branch.starts_with('*'))
-        .map(|branch| branch.trim())
-        .collect::<Vec<&str>>();
+    let (current_branch, other_branches) = get_branch_info()?;
 
     // check if other_branches is empty
     // if empty, return early
@@ -258,7 +247,7 @@ pub fn delete_branch() -> CliResult<()> {
     match confirm {
         Ok(true) => {
             git_exec(
-                &["branch", "-D", branch_to_delete],
+                &["branch", "-D", &branch_to_delete],
                 "failed to delete branch",
                 false,
             )?;
