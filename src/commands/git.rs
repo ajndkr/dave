@@ -158,13 +158,23 @@ pub fn switch_branch() -> CliResult<()> {
         .map(|branch| branch.trim_start_matches('*').trim())
         .unwrap_or("main");
 
-    println!("{}: {}", "current branch".bold(), current_branch);
-
     let other_branches = all_branches
         .iter()
         .filter(|branch| !branch.starts_with('*'))
         .map(|branch| branch.trim())
         .collect::<Vec<&str>>();
+
+    // check if other_branches is empty
+    // if empty, return early
+    if other_branches.is_empty() {
+        println!(
+            "no other local branches found except for: {}. nothing to switch.",
+            current_branch.bold()
+        );
+        return Ok(());
+    }
+
+    println!("{}: {}", "current branch".bold(), current_branch);
 
     let new_branch = Select::new("select new branch:", other_branches).prompt()?;
 
@@ -209,11 +219,34 @@ pub fn delete_branch() -> CliResult<()> {
     )?;
 
     let git_output_str = String::from_utf8_lossy(&git_output.stdout);
-    let other_branches = git_output_str
+    let all_branches = git_output_str
         .lines()
-        .filter(|line| !line.starts_with('*'))
+        .map(|line| line.trim())
+        .collect::<Vec<&str>>();
+
+    // finds current branch from the above git command output
+    // if no branch is found, defaults to 'main'
+    let current_branch = all_branches
+        .iter()
+        .find(|branch| branch.starts_with('*'))
+        .map(|branch| branch.trim_start_matches('*').trim())
+        .unwrap_or("main");
+
+    let other_branches = all_branches
+        .iter()
+        .filter(|branch| !branch.starts_with('*'))
         .map(|branch| branch.trim())
         .collect::<Vec<&str>>();
+
+    // check if other_branches is empty
+    // if empty, return early
+    if other_branches.is_empty() {
+        println!(
+            "no other local branches found except for: {}. nothing to delete.",
+            current_branch.bold()
+        );
+        return Ok(());
+    }
 
     let branch_to_delete = Select::new("select branch to delete:", other_branches).prompt()?;
 
