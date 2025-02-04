@@ -1,7 +1,7 @@
 use crate::{CliResult, Command};
 use clap::Subcommand;
 use colored::Colorize;
-use inquire::{Confirm, Select};
+use inquire::{Confirm, InquireError, Select};
 use std::process;
 use which::which;
 
@@ -190,7 +190,21 @@ pub fn switch_branch() -> CliResult<()> {
 
     println!("{}: {}", "current branch".bold(), current_branch);
 
-    let new_branch = Select::new("select new branch:", other_branches).prompt()?;
+    let new_branch = match Select::new("select new branch:", other_branches).prompt() {
+        Ok(branch) => branch,
+        Err(InquireError::OperationCanceled) => {
+            println!("{}", "aborting branch switch".bold());
+            return Ok(());
+        }
+        Err(e) => {
+            println!(
+                "unexpected error: {}. {}",
+                e,
+                "aborting branch switch".bold()
+            );
+            return Ok(());
+        }
+    };
 
     println!("{}", "checking local branch status".bold());
     let mut local_changes_stashed = false;
@@ -237,7 +251,21 @@ pub fn delete_branch() -> CliResult<()> {
         return Ok(());
     }
 
-    let branch_to_delete = Select::new("select branch to delete:", other_branches).prompt()?;
+    let branch_to_delete = match Select::new("select branch to delete:", other_branches).prompt() {
+        Ok(branch) => branch,
+        Err(InquireError::OperationCanceled) => {
+            println!("{}", "aborting branch delete".bold());
+            return Ok(());
+        }
+        Err(e) => {
+            println!(
+                "unexpected error: {}. {}",
+                e,
+                "aborting branch delete".bold()
+            );
+            return Ok(());
+        }
+    };
 
     let confirm = Confirm::new("are you sure?")
         .with_default(false)
@@ -254,8 +282,14 @@ pub fn delete_branch() -> CliResult<()> {
 
             println!("{}", "branch delete complete ^.^".bold());
         }
-        Ok(false) => println!("{}", "aborting branch delete".bold()),
-        Err(_) => println!("{}", "invalid input. aborting branch delete".bold()),
+        Ok(false) | Err(InquireError::OperationCanceled) => {
+            println!("{}", "aborting branch delete".bold())
+        }
+        Err(e) => println!(
+            "unexpected error: {}. {}",
+            e,
+            "aborting branch delete".bold()
+        ),
     }
 
     Ok(())
