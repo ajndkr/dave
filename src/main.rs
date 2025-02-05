@@ -67,7 +67,7 @@ fn main() -> CliResult<()> {
         Some(Commands::Git { command }) => {
             command.map_or_else(|| handle_invalid_subcommand("git"), |cmd| cmd.execute())?
         }
-        None => {
+        _ => {
             let _ = Cli::command().print_help();
             std::process::exit(0);
         }
