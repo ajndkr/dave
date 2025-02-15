@@ -23,8 +23,8 @@ impl Command for GitCommands {
     fn execute(&self) -> CliResult<()> {
         match self {
             GitCommands::Sync {} => sync(),
-            GitCommands::Switch {} => switch_branch(),
-            GitCommands::Delete {} => delete_branch(),
+            GitCommands::Switch {} => switch(),
+            GitCommands::Delete {} => delete(),
         }
     }
 }
@@ -175,7 +175,7 @@ pub fn sync() -> CliResult<()> {
 //
 // errors:
 // - CliError::Command: if any git command fails
-pub fn switch_branch() -> CliResult<()> {
+pub fn switch() -> CliResult<()> {
     let (current_branch, other_branches) = get_branch_info()?;
 
     // check if other_branches is empty
@@ -238,7 +238,7 @@ pub fn switch_branch() -> CliResult<()> {
 //
 // errors:
 // - CliError::Command: if any git command fails
-pub fn delete_branch() -> CliResult<()> {
+pub fn delete() -> CliResult<()> {
     let (current_branch, other_branches) = get_branch_info()?;
 
     // check if other_branches is empty
