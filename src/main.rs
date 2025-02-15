@@ -1,6 +1,6 @@
 use clap::{value_parser, ArgAction, CommandFactory, Parser, Subcommand};
 use clap_complete::{generate, Shell};
-use devx::{CliResult, Command, GitCommands, ManageCommands};
+use devx::{CliResult, Command, CondaCommands, GitCommands, ManageCommands, PreCommitCommands};
 use std::io;
 
 #[derive(Parser)]
@@ -24,6 +24,16 @@ enum Commands {
     Git {
         #[clap(subcommand)]
         command: Option<GitCommands>,
+    },
+    #[command(about = "run conda workflows")]
+    Conda {
+        #[clap(subcommand)]
+        command: Option<CondaCommands>,
+    },
+    #[command(about = "run pre-commit workflows")]
+    PreCommit {
+        #[clap(subcommand)]
+        command: Option<PreCommitCommands>,
     },
 }
 
@@ -67,6 +77,13 @@ fn main() -> CliResult<()> {
         Some(Commands::Git { command }) => {
             command.map_or_else(|| handle_invalid_subcommand("git"), |cmd| cmd.execute())?
         }
+        Some(Commands::Conda { command }) => {
+            command.map_or_else(|| handle_invalid_subcommand("conda"), |cmd| cmd.execute())?
+        }
+        Some(Commands::PreCommit { command }) => command.map_or_else(
+            || handle_invalid_subcommand("pre-commit"),
+            |cmd| cmd.execute(),
+        )?,
         _ => {
             let _ = Cli::command().print_help();
             std::process::exit(0);
